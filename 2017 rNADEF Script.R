@@ -151,7 +151,7 @@ seas
 #read in crns, change file name to run your own data
 thedata <- read.rwl('wa091.rwl') #Use your file in your WD
 
-#Abrams and Nowacki technique
+#Abrams and Nowacki technique creates a large number of files in your wd
 growthAveragingALL(thedata, releases = NULL, m1 = 10, m2 = 10,buffer = 10, drawing = TRUE, criteria = -0.25, criteria2 = -0.50,prefix = "ga", gfun = mean, length = 5, storedev = jpeg)
 
 #plot raw data
