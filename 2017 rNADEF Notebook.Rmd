@@ -1,0 +1,103 @@
+---
+title: "rNADEF Workbook"
+author: North American Dendroecological Fieldweek <br> <i><small>Stockton Maxwell, Grant Harley, Chris Gentry, and data from many others</small></i> <br> 
+output: 
+  html_notebook:
+    number_sections: true
+---
+<style>
+  .col2 {
+    columns: 2 200px;         /* number of columns and width in pixels*/
+    -webkit-columns: 2 200px; /* chrome, safari */
+    -moz-columns: 2 200px;    /* firefox */
+  }
+  .col3 {
+    columns: 3 100px;
+    -webkit-columns: 3 100px;
+    -moz-columns: 3 100px;
+  }
+</style>
+
+# Packages Used in this Document<br>
+There are a number of useful packages for manipulating and analyzing data in **R**. In this document we will use a few of the primary packages specific to tree-ring analysis.</br> 
+<div class="col2">
+<ul>
++ dplR
++ treeclim
++ graphics
++ utils
++ TRADER
++ burnr
++ ggplot2
+</ul></div><br>
+If you do not have one or many of these packages installed you can add them by using ```install.packages(x)``` function where *x* is the name of the package you desire to install.</br>
+
+```{r Packages, message=FALSE, paged.print=FALSE}
+library(dplR)
+library(treeclim)
+library(graphics)
+library(utils)
+library(TRADER)
+library(burnr)
+library(ggplot2)
+```
+
+# COFECHA in dplR
+Using the script below, you will be able to read in raw ring width files for *COFECHA*-like analysis. To run your own data, change the ```fname```  to match the data in your ```data <- read.rwl(fname = ... , format = "auto")``` script.<br>
+```{r Import Data and Analyze, echo=TRUE, fig.height=6, fig.width=10}
+grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto") #fname can be changed to run your data
+rwl.stats(grow.rwl) #summary and stats of raw ring width file
+```
+</br>
+You can plot this information to view the time series and/or skeleton plot of a series.
+<br>
+```{r Plot Time Series, echo=TRUE, fig.height=4.5, fig.width=10}
+seg.plot(grow.rwl) #plot of series time spans
+skel.plot(grow.rwl[1]) #skeleton plot of an individual series, where [1] identifies the first record in grow.rwl
+```
+</br>
+You can also examine the common time interval, radii for each series, and mean sensitivity of the rwl.
+```{r Common Interval, echo=TRUE, fig.height=10, fig.width=10}
+data.frame(colSums(grow.rwl, na.rm = TRUE, dims = 1)) #get radii length in mm
+wa091.common <- common.interval(grow.rwl, type=c("years"), make.plot=TRUE) #find common time interval
+sens1(grow.rwl) #calculate mean sensitivity
+```
+
+# Crossdating
+
+Using functions from **dplR** you can also obtain *COFECH*-like output.
+```{r Crossdating, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+#essentially COFECHA
+corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, 
+             biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE,
+             master = NULL)
+#examine an individual series
+series.rwl.plot(grow.rwl, series = "TCT202A", series.yrs = as.numeric(names(series)),
+                seg.length = 50, bin.floor = 100, n = NULL,
+                prewhiten = TRUE, biweight = TRUE, floor.plus1 = FALSE)
+```
+## Spaghetti plot of raw ring widths
+
+Frequently you will see a plot of the raw ring widths of all series on the same graph. These *spaghetti plots* can be created using the ```spag.plot()``` function in **dplR**.
+```{r Spag Plot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+spag.plot(rwl = grow.rwl, zfac = 1, useRaster = FALSE, res = 300)
+```
+
+### Calculate marker rings from raw ring width series
+markers <- pointer(grow.rwl)
+
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r echo=TRUE}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
