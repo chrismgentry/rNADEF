@@ -1,0 +1,177 @@
+---
+title: "rNADEF Workbook"
+author: North American Dendroecological Fieldweek <br> <i><small>Stockton Maxwell,
+  Grant Harley, Chris Gentry, and data from many others</small></i> <br>
+output:
+  html_document:
+    df_print: paged
+  html_notebook:
+    number_sections: yes
+  pdf_document: default
+---
+<style>
+  .col2 {
+    columns: 2 200px;         /* number of columns and width in pixels*/
+    -webkit-columns: 2 200px; /* chrome, safari */
+    -moz-columns: 2 200px;    /* firefox */
+  }
+  .col3 {
+    columns: 3 100px;
+    -webkit-columns: 3 100px;
+    -moz-columns: 3 100px;
+  }
+</style>
+
+# Packages used in this Document<br>
+There are a number of useful packages for manipulating and analyzing data in **R**. In this document we will use a few of the primary packages specific to tree-ring analysis.</br> 
+<div class="col2">
+<ul>
++ dplR
++ treeclim
++ graphics
++ utils
++ TRADER
++ burnr
++ ggplot2
+</ul></div><br>
+If you do not have one or many of these packages installed you can add them by using ```install.packages(x)``` function where *x* is the name of the package you desire to install.</br>
+
+```{r Packages, message=FALSE, paged.print=FALSE}
+library(dplR)
+library(treeclim)
+library(graphics)
+library(utils)
+library(TRADER)
+library(burnr)
+library(ggplot2)
+```
+
+# COFECHA in dplR
+Using the script below, you will be able to read in raw ring width files for *COFECHA*-like analysis. To run your own data, change the ```fname```  to match the data in your ```data <- read.rwl(fname = ... , format = "auto")``` script. You can also examine summary statistics of your ring width file using the ```rwl.stats(x)``` function.
+
+```{r Import Data and Analyze, echo=TRUE, fig.height=6, fig.width=10}
+grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto")
+rwl.stats(grow.rwl)
+```
+
+You can plot this information to view the time series and/or skeleton plot of a series. To see the time series, use the function ```seg.plot(x)```. To view the skeleton plot of an individual series, use ```skel.plot(x[#])``` where # is the series/core you would like to view.
+
+```{r Plot Time Series, echo=TRUE, fig.height=4.5, fig.width=10}
+seg.plot(grow.rwl)
+skel.plot(grow.rwl[1])
+```
+
+You can also examine the radii (mm) for each series, common time interval, and mean sensitivity of the rwl. While there isn't a direct function in *dplR* to calculate radii, you can use ```colSums()``` from base R to calculate the values. For the common interval and mean sensitivity you can use ```common.interval()``` and ```sens1()``` respectively.
+
+```{r Radii-ComInt-MeanSen, echo=TRUE, fig.height=10, fig.width=10}
+data.frame(colSums(grow.rwl, na.rm = TRUE, dims = 1))
+wa091.common <- common.interval(grow.rwl, type=c("years"), make.plot=TRUE)
+sens1(grow.rwl)
+```
+
+## Crossdating
+
+Using functions from **dplR** you can also obtain a *COFECH*-like output with the ```corr.rwl.seg()``` function. You can also examine an individual series with ```series.rwl.plot()```. Please note that the options used in the examples below are specific to this workshop might be different from your specific analysis.
+
+```{r Crossdating, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, 
+             biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE,
+             master = NULL)
+```
+To examine an individual series you will need to be able to identify the specific series in the function.
+```{r Series Plot, echo=TRUE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+series.rwl.plot(grow.rwl, series = "TCT202A", series.yrs = as.numeric(names(series)),
+                seg.length = 50, bin.floor = 100, n = NULL,
+                prewhiten = TRUE, biweight = TRUE, floor.plus1 = FALSE)
+```
+
+To facilitate crossdating you can also use *dplR* to calculate marker rings with the ```pointer()``` function. 
+
+```{r Marker Rings, echo=TRUE}
+markers <- pointer(grow.rwl)
+markers
+```
+
+
+## Spaghetti plot of raw ring widths
+
+Frequently you will see a plot of the ring widths of all series on the same graph. These *spaghetti plots* can be created using the ```spag.plot()``` function in **dplR**.
+```{r Spag Plot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+spag.plot(rwl = grow.rwl, zfac = 1, useRaster = FALSE, res = 300)
+```
+
+# Arstan stuff in dplR
+
+The standalone **ARSTAN** program allows you to develop chronologies and interactively detrend series. These options are also baked into **dplR**. To run interactive detrending you can use the ```i.detrend()``` function.
+```{r iDetrending, include=TRUE, message=FALSE, warning=FALSE}
+grow.rwi.int <- i.detrend(rwl = grow.rwl, nyrs = NULL, f = 0.5,pos.slope = FALSE) #allows you to see a variety of fits
+```
+You will need to select a detrending method for each series.
+
+To view the spaghetti plot for the detrended series you can once again use the ```spag.plot()``` function similar to above except substituting the raw ring width data for the detrended data.
+```{r Detrend Spag Plot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+spag.plot(rwl = grow.rwi.int, zfac = 1, useRaster = FALSE, res = 300)
+```
+
+If you want to utilize a singular detrending method for all of your series you can use the detrend() function instead of i.detrend(). In this function you will choose one of the following detrending options with *method = *: "Spline", "ModNegExp", "Mean", "Ar", "Friedman", or "ModHugershoff".
+
+```{r Detrending, echo=TRUE, message=FALSE, warning=FALSE}
+grow.rwi <- detrend(rwl = grow.rwl, method = c("Spline"), nyrs = NULL, f = 0.5, pos.slope = FALSE)
+grow.rwi
+```
+
+To examine the statistics for the entire chronology you can use ```rwi.stats()``` or ```rwi.stats.running()``` to use running statistics in order to adjust the time periods.
+
+```{r Stats, echo=TRUE, message=FALSE, warning=FALSE}
+rwi.stats(grow.rwi)
+```
+
+```{r RunStats, echo=TRUE, message=FALSE, warning=FALSE}
+rwi.stats.running(grow.rwi)
+```
+
+The ARSTAN program generates a standardized chronology, an ARSTAN chronology, and a residual chronology. In *dplR* you can use the ```chron()``` function to build a mean value chronology from detrended ring widths produced from a ```detrend()``` function. 
+
+Standardized chronology:
+```{r Standardized, echo=TRUE, message=FALSE, warning=FALSE}
+grow.crn <- chron(x = grow.rwi, prefix = "TAH", biweight = TRUE, prewhiten = FALSE)
+grow.crn
+```
+
+Standardized and Residual chronologies:
+```{r Residual, echo=TRUE, message=FALSE, warning=FALSE}
+grow.crn <- chron(x = grow.rwi, prefix = "TAH", biweight = TRUE, prewhiten = TRUE)
+grow.crn
+```
+
+You can then plot the chronology using ```crn.plot()``` to view chronologies developed with ```chron()```.
+
+```{r ChronPlot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+crn.plot(crn = grow.crn, add.spline = TRUE, nyrs = NULL, f = 0.5, crn.line.col='grey50',
+         spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80',
+         crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1,
+         xlab="Time", ylab="RWI")
+```
+
+#wavelet transform
+Years <- as.numeric(rownames(grow.crn))
+PANstd <- grow.crn[, 1]
+out.wave <- morlet(y1 = PANstd, x1 = Years, p2 = 9, dj = 0.1,
+                   siglvl = 0.99)
+wavelet.plot(out.wave, useRaster = NA)
+
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r echo=TRUE}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
