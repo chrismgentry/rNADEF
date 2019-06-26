@@ -5,9 +5,14 @@ author: North American Dendroecological Fieldweek <br> <i><small>Stockton Maxwel
 output:
   html_document:
     df_print: paged
-  html_notebook:
+    rows.print: 10
+  html_notebook: 
     number_sections: yes
+    theme: readable
+    toc: yes
   pdf_document: default
+editor_options: 
+  chunk_output_type: inline
 ---
 <style>
   .col2 {
@@ -34,7 +39,7 @@ There are a number of useful packages for manipulating and analyzing data in **R
 + burnr
 + ggplot2
 </ul></div><br>
-If you do not have one or many of these packages installed you can add them by using ```install.packages(x)``` function where *x* is the name of the package you desire to install.</br>
+If you do not have one or many of these packages installed you can add them by using ```install.packages(x)``` function where *x* is the name of the package you desire to install. Start by loading all of the packages:</br>
 
 ```{r Packages, message=FALSE, paged.print=FALSE}
 library(dplR)
@@ -47,16 +52,16 @@ library(ggplot2)
 ```
 
 # COFECHA in dplR
-Using the script below, you will be able to read in raw ring width files for *COFECHA*-like analysis. To run your own data, change the ```fname```  to match the data in your ```data <- read.rwl(fname = ... , format = "auto")``` script. You can also examine summary statistics of your ring width file using the ```rwl.stats(x)``` function.
+Using the script below, you will be able to read in raw ring width files for *COFECHA*-like analysis. To run your own data, change the ```fname```  to match the data in your ```data <- read.rwl(fname = ... , format = "auto")``` script. You can also examine summary statistics of your ring width file using the ```rwl.stats(x)``` function. Alternatively you can use the RWL file included in this project.
 
-```{r Import Data and Analyze, echo=TRUE, fig.height=6, fig.width=10}
+```{r Import Data and Analyze, echo=TRUE}
 grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto")
 rwl.stats(grow.rwl)
 ```
 
 You can plot this information to view the time series and/or skeleton plot of a series. To see the time series, use the function ```seg.plot(x)```. To view the skeleton plot of an individual series, use ```skel.plot(x[#])``` where # is the series/core you would like to view.
 
-```{r Plot Time Series, echo=TRUE, fig.height=4.5, fig.width=10}
+```{r Plot Time Series, echo=TRUE, fig.height=6, fig.width=10}
 seg.plot(grow.rwl)
 skel.plot(grow.rwl[1])
 ```
@@ -71,15 +76,15 @@ sens1(grow.rwl)
 
 ## Crossdating
 
-Using functions from **dplR** you can also obtain a *COFECH*-like output with the ```corr.rwl.seg()``` function. You can also examine an individual series with ```series.rwl.plot()```. Please note that the options used in the examples below are specific to this workshop might be different from your specific analysis.
+Using functions from **dplR** you can also obtain a *COFECH*-like output with the ```corr.rwl.seg()``` function. You can also examine an individual series with ```series.rwl.plot()```. Please note that the options used in the examples below are specific to this project and might be different from your specific analysis.
 
-```{r Crossdating, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+```{r Crossdating, echo=TRUE, results='hide', fig.keep='all', fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
 corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, 
              biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE,
              master = NULL)
 ```
 To examine an individual series you will need to be able to identify the specific series in the function.
-```{r Series Plot, echo=TRUE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+```{r Series Plot, echo=TRUE, results='hide', fig.keep='all', message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
 series.rwl.plot(grow.rwl, series = "TCT202A", series.yrs = as.numeric(names(series)),
                 seg.length = 50, bin.floor = 100, n = NULL,
                 prewhiten = TRUE, biweight = TRUE, floor.plus1 = FALSE)
@@ -100,7 +105,7 @@ Frequently you will see a plot of the ring widths of all series on the same grap
 spag.plot(rwl = grow.rwl, zfac = 1, useRaster = FALSE, res = 300)
 ```
 
-# Arstan stuff in dplR
+# Arstan in dplR
 
 The standalone **ARSTAN** program allows you to develop chronologies and interactively detrend series. These options are also baked into **dplR**. To run interactive detrending you can use the ```i.detrend()``` function.
 ```{r iDetrending, include=TRUE, message=FALSE, warning=FALSE}
@@ -113,7 +118,7 @@ To view the spaghetti plot for the detrended series you can once again use the `
 spag.plot(rwl = grow.rwi.int, zfac = 1, useRaster = FALSE, res = 300)
 ```
 
-If you want to utilize a singular detrending method for all of your series you can use the detrend() function instead of i.detrend(). In this function you will choose one of the following detrending options with *method = *: "Spline", "ModNegExp", "Mean", "Ar", "Friedman", or "ModHugershoff".
+If you want to utilize a singular detrending method for all of your series you can use the ```detrend()``` function instead of ```i.detrend()```. In this function you will choose one of the following detrending options with *method = *: "Spline", "ModNegExp", "Mean", "Ar", "Friedman", or "ModHugershoff".
 
 ```{r Detrending, echo=TRUE, message=FALSE, warning=FALSE}
 grow.rwi <- detrend(rwl = grow.rwl, method = c("Spline"), nyrs = NULL, f = 0.5, pos.slope = FALSE)
@@ -160,8 +165,81 @@ out.wave <- morlet(y1 = PANstd, x1 = Years, p2 = 9, dj = 0.1,
                    siglvl = 0.99)
 wavelet.plot(out.wave, useRaster = NA)
 
+# Treeclim
+
+To begin in **TreeClim** you need to load a chronology. You can use your own chronology or the chronology developed in the previous steps. With the script below, you can view a summary of the chronology you will be using for this analysis. Alternatively, you can change the name of the chronology to one you have generated.
+```{r ChronSum, echo=TRUE, message=FALSE, warning=FALSE}
+#summary of the chronology
+summary(grow.crn)
+```
+
+Next you will need to load climate data. There are a number of methods for adding climate data but this example has one as a csv file in the project.
+
+```{r Climate Data, echo=TRUE, message=FALSE, warning=FALSE}
+climate <- read.csv("WA_div5_climate_cascades_west.csv", header = TRUE)
+names(climate)
+summary(climate)
+ym <- climate[,1:2] #pull year and month columns
+var1 <- climate[3] #pull climate variables, 1 or 2 at a time to avoid N problems
+clim <- data.frame(c(ym, var1)) #build climate data frame 
+summary(clim)
+```
 
 
+#Response function analysis in treeclim - modeled after Dendroclim2002. 
+#Now can take dynamic = "static", "moving", "evolving"
+resp <- dcc(chrono = grow.crn, climate = clim, selection = -5:10, 
+            method = "response", dynamic = "evolving", win_size = 35, win_offset = 1, start_last = TRUE,
+            timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
+coef <- coef(resp)
+plot(resp)
+resp #show model results
+traceplot(resp, variables = NULL, facet = FALSE)
+#save the output
+write.csv(coef, file = ("pcp_coef.csv")) #output coeff
+tiff("resp_coef.tiff", width = 8, height = 4, units = 'in', res = 300) #write plot to file
+plot.new()
+plot(resp)
+title(main = "Climate", xlab = "Month")
+dev.off()
+
+#evaluate recon skill with split calibration, requires 2 climate variables
+recon <- dcc(chrono = grow.crn, climate = clim, selection = 1:2, #use a selection with recon variable of interest
+             method = "response", dynamic = "static", win_size = 35, win_offset = 1, start_last = TRUE,
+             timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
+recon_coef <- coef(recon)
+plot(recon)
+recon #show model results
+#this does the evaluation
+skillz <- skills(object = recon, target = .mean(1:2), model = "ols", calibration = "50%", timespan = NULL)
+plot(skillz)
+skillz #show model results
+
+#evaluate recon skill with split calibration with single variable
+recon_dlm <- dlm(chrono = grow.crn, climate = clim, selection = 2, timespan = NULL, var_names = NULL,
+                 param_names = NULL, intercept = TRUE, scale = FALSE)
+recon_coef <- coef(recon_dlm)
+plot(recon_dlm)
+
+recon_dlm #show model results
+#this does the evaluation
+skillz <- skills(object = recon_dlm, target = 2, model = "ols", calibration = "50%", timespan = NULL)
+plot(skillz)
+skillz #show model results
+
+#seasonal correlation - try it
+climate <- read.csv("WA_div5_climate_cascades_west.csv", header = TRUE)
+names(climate)
+summary(climate)
+ym <- climate[,1:2] #pull year and month columns
+var1 <- climate[3:4] #pull climate variables, 1 or 2 at a time to avoid N problems
+clim <- data.frame(c(ym, var1)) #build climate data frame 
+summary(clim)
+seas <- seascorr(grow.crn, climate, var_names = NULL, timespan = NULL, complete = 9,
+                 season_lengths = c(1, 3, 6), primary = 1, secondary = 2, ci = 0.05)
+plot(seas)
+seas
+-----------------------------------------------------
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
