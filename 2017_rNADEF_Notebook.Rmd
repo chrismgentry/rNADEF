@@ -3,13 +3,13 @@ title: "rNADEF Workbook"
 author: North American Dendroecological Fieldweek <br> <i><small>Stockton Maxwell,
   Grant Harley, Chris Gentry, and data from many others</small></i> <br>
 output:
-  html_document:
-    df_print: paged
-    rows.print: 10
   html_notebook: 
     number_sections: yes
     theme: readable
     toc: yes
+  html_document:
+    df_print: paged
+    rows.print: 10
   pdf_document: default
 editor_options: 
   chunk_output_type: inline
@@ -61,7 +61,7 @@ rwl.stats(grow.rwl)
 
 You can plot this information to view the time series and/or skeleton plot of a series. To see the time series, use the function ```seg.plot(x)```. To view the skeleton plot of an individual series, use ```skel.plot(x[#])``` where # is the series/core you would like to view.
 
-```{r Plot Time Series, echo=TRUE, fig.height=6, fig.width=10}
+```{r Plot Time Series, echo=TRUE, fig.height=5, fig.width=10}
 seg.plot(grow.rwl)
 skel.plot(grow.rwl[1])
 ```
@@ -239,17 +239,61 @@ seas <- seascorr(grow.crn, climate, var_names = NULL, timespan = NULL, complete 
                  season_lengths = c(1, 3, 6), primary = 1, secondary = 2, ci = 0.05)
 plot(seas)
 seas
------------------------------------------------------
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+# TRADER Code for Growth Release Detection
 
-```{r echo=TRUE}
-plot(cars)
+#read in crns, change file name to run your own data
+thedata <- read.rwl('wa091.rwl') #Use your file in your WD
+
+#Abrams and Nowacki technique creates a large number of files in your wd
+growthAveragingALL(thedata, releases = NULL, m1 = 10, m2 = 10,buffer = 10, drawing = TRUE, criteria = -0.25, criteria2 = -0.50,prefix = "ga", gfun = mean, length = 5, storedev = jpeg)
+
+#plot raw data
+spag.plot(thedata, zfac = 1, useRaster = FALSE, res = 300)
+thedata.raw.crn <- chron(thedata, prefix = "CAM", prewhiten=FALSE)
+plot(thedata.raw.crn,abline.pos=NULL,ylab='mm',xlab='Year')
+
+#Basal Area Increment calculation in dplR
+
+grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto") #just change fname to run stuff below
+basal <- bai.out(grow.rwl, diam = NULL)
+basal_p <- print(basal)
+spag.plot(basal[1], zfac = 1, useRaster = FALSE, res = 300)
+write.csv(basal_p, "basal_bai.csv")
+
+# burnR
+
+The **burnR** package creates composite fire history plots similar to the **FHX2** and **FHAES** programs. It uses *FHX* formatted files. An example of a FHX file is included on this project.
+
+After loading the ```burnr``` library, you can use ```read_fhx()``` to load data already formatted into the FHX format.
+
+```{r Load FHX, echo=TRUE, message=FALSE, warning=FALSE}
+Zion <- read_fhx('Zion.fhx')
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+Although each of the samples have an ID, we can add so site information in order to facet our plots. This will sort each of the samples into the appropriate category when facted with the ```plot_demograph``` function.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r Plot Facet FHX, echo=TRUE, message=FALSE, warning=FALSE}
+Sites <- read.csv('ZionSiteIDs.csv')
+facetplot <- plot_demograph(Zion, facet_group = Sites$SiteID, facet_id = Sites$series, plot_legend = TRUE)
+print(facetplot)
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+Another option available in ```plot_demograph``` is a to create a plot of all samples with a composite plot beneath the plot of individuals. In addition to the plot and composite, you can also add annotations to highlight common fire dates.
+
+```{r Plot Comp FHX, echo=TRUE, message=FALSE, warning=FALSE}
+rugplot <- plot_demograph(Zion, composite_rug = TRUE, plot_legend = TRUE)
+compositerug <- rugplot + 
+  annotate('rect', xmin = 1721, xmax = 1723, ymin = 0, ymax = 21, alpha = 0.4) + 
+  annotate('rect', xmin = 1734, xmax = 1736, ymin = 0, ymax = 21, alpha = 0.4) + 
+  annotate('rect', xmin = 1748, xmax = 1750, ymin = 0, ymax = 21, alpha = 0.4) + 
+  annotate('rect', xmin = 1777, xmax = 1779, ymin = 0, ymax = 21, alpha = 0.4) + 
+  annotate('rect', xmin = 1793, xmax = 1795, ymin = 0, ymax = 21, alpha = 0.4) + 
+  scale_x_continuous(limits=c(1450, 2005), breaks = seq(1450,2005,25)) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.2), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+print(compositerug)
+```
+
+-----------------------------------------------------
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
