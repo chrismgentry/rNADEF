@@ -1,7 +1,6 @@
 ---
 title: "rNADEF Workbook"
-author: North American Dendroecological Fieldweek <br> <i><small>Stockton Maxwell,
-  Grant Harley, Chris Gentry, and data from many others</small></i> <br>
+author: North American Dendroecological Fieldweek <br> <i><small>Script by Stockton Maxwell, NADEF Co-Organizer; Github and Website by Chris Gentry; and data from Grant Harley, NADEF Co-Organizer,  Stockton Maxwell, Chris Gentry, and many others</small></i> <br>
 output:
   html_notebook: 
     number_sections: yes
@@ -27,35 +26,42 @@ editor_options:
   }
 </style>
 
-# Packages used in this Document<br>
-There are a number of useful packages for manipulating and analyzing data in **R**. In this document we will use a few of the primary packages specific to tree-ring analysis.</br> 
+# Getting Started
+## Libraries Used in this Document<br>
+There are a number of useful libraries for manipulating and analyzing tree-ring data in **R**. In this document we will use the following tree-ring specific and general libraries.</br> 
 <div class="col2">
 <ul>
-+ dplR
-+ treeclim
-+ graphics
-+ utils
-+ TRADER
 + burnr
++ dendroTools
++ DendroSync
++ dplR
 + ggplot2
-</ul></div><br>
-If you do not have one or many of these packages installed you can add them by using ```install.packages(x)``` function where *x* is the name of the package you desire to install. Start by loading all of the packages:</br>
++ TRADER
++ treeclim
++ utils
+</ul></div>
 
-```{r Packages, message=FALSE, paged.print=FALSE}
-library(dplR)
-library(treeclim)
-library(graphics)
-library(utils)
-library(TRADER)
+## Installing and Loading Libraries<br>
+If you do not have one or many of these libraries installed you can add them by using the  ```install.libraries(x)``` function where *x* is the name of the package you desire to install. Start by loading all of the libraries:</br>
+
+```{r libraries, message=FALSE, paged.print=FALSE}
 library(burnr)
+library(dendroTools)
+library(DendroSync)
+library(dplR)
 library(ggplot2)
+library(TRADER)
+library(treeclim)
+library(utils)
 ```
+
+All of these packages are cited in the [README](https://github.com/chrismgentry/rNADEF/blob/master/README.md) file available in the repository found at [rNADEF Workbook](https://github.com/chrismgentry/rNADEF)
 
 # COFECHA in dplR
 Using the script below, you will be able to read in raw ring width files for *COFECHA*-like analysis. To run your own data, change the ```fname```  to match the data in your ```data <- read.rwl(fname = ... , format = "auto")``` script. You can also examine summary statistics of your ring width file using the ```rwl.stats(x)``` function. Alternatively you can use the RWL file included in this project.
 
-```{r Import Data and Analyze, echo=TRUE}
-grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto")
+```{r Import Data and Analyze, echo=TRUE, message=FALSE, warning=FALSE}
+grow.rwl <- read.tucson(fname = "Yellowstone_PSME_format.txt")
 rwl.stats(grow.rwl)
 ```
 
@@ -69,8 +75,8 @@ skel.plot(grow.rwl[1])
 You can also examine the radii (mm) for each series, common time interval, and mean sensitivity of the rwl. While there isn't a direct function in *dplR* to calculate radii, you can use ```colSums()``` from base R to calculate the values. For the common interval and mean sensitivity you can use ```common.interval()``` and ```sens1()``` respectively.
 
 ```{r Radii-ComInt-MeanSen, echo=TRUE, fig.height=10, fig.width=10}
-data.frame(colSums(grow.rwl, na.rm = TRUE, dims = 1))
-wa091.common <- common.interval(grow.rwl, type=c("years"), make.plot=TRUE)
+colSums(grow.rwl, na.rm = TRUE, dims = 1)
+crn.common <- common.interval(grow.rwl, type=c("years"), make.plot=TRUE)
 sens1(grow.rwl)
 ```
 
@@ -79,15 +85,17 @@ sens1(grow.rwl)
 Using functions from **dplR** you can also obtain a *COFECH*-like output with the ```corr.rwl.seg()``` function. You can also examine an individual series with ```series.rwl.plot()```. Please note that the options used in the examples below are specific to this project and might be different from your specific analysis.
 
 ```{r Crossdating, echo=TRUE, results='hide', fig.keep='all', fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
-corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, 
-             biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE,
-             master = NULL)
+corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE, master = NULL)
 ```
 To examine an individual series you will need to be able to identify the specific series in the function.
 ```{r Series Plot, echo=TRUE, results='hide', fig.keep='all', message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
-series.rwl.plot(grow.rwl, series = "TCT202A", series.yrs = as.numeric(names(series)),
-                seg.length = 50, bin.floor = 100, n = NULL,
-                prewhiten = TRUE, biweight = TRUE, floor.plus1 = FALSE)
+series.rwl.plot(grow.rwl, series = "BTK05A", series.yrs = as.numeric(names(series)), seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, biweight = TRUE, floor.plus1 = FALSE)
+```
+
+Using ```interseries.cor``` will allow you to calculate the interseries correlation between each series and the master for the ring width file.
+
+```{r Interseries Correlation, echo=TRUE}
+interseries.cor(grow.rwl, n = NULL, prewhiten = TRUE, biweight = TRUE, method = "spearman")
 ```
 
 To facilitate crossdating you can also use *dplR* to calculate marker rings with the ```pointer()``` function. 
@@ -98,7 +106,7 @@ markers
 ```
 
 
-## Spaghetti plot of raw ring widths
+## Spaghetti Plot of Raw Ring Widths
 
 Frequently you will see a plot of the ring widths of all series on the same graph. These *spaghetti plots* can be created using the ```spag.plot()``` function in **dplR**.
 ```{r Spag Plot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
@@ -106,8 +114,9 @@ spag.plot(rwl = grow.rwl, zfac = 1, useRaster = FALSE, res = 300)
 ```
 
 # Arstan in dplR
+## Detrending
 
-The standalone **ARSTAN** program allows you to develop chronologies and interactively detrend series. These options are also baked into **dplR**. To run interactive detrending you can use the ```i.detrend()``` function.
+The standalone **ARSTAN** program allows you to develop site chronologies and interactively detrend or standardize a series. These options are also baked into **dplR**. To run interactive detrending you can use the ```i.detrend()``` function. Ihis allows you to explore curve fits for each tree ring series.
 ```{r iDetrending, include=TRUE, message=FALSE, warning=FALSE}
 grow.rwi.int <- i.detrend(rwl = grow.rwl, nyrs = NULL, f = 0.5,pos.slope = FALSE) #allows you to see a variety of fits
 ```
@@ -118,14 +127,14 @@ To view the spaghetti plot for the detrended series you can once again use the `
 spag.plot(rwl = grow.rwi.int, zfac = 1, useRaster = FALSE, res = 300)
 ```
 
-If you want to utilize a singular detrending method for all of your series you can use the ```detrend()``` function instead of ```i.detrend()```. In this function you will choose one of the following detrending options with *method = *: "Spline", "ModNegExp", "Mean", "Ar", "Friedman", or "ModHugershoff".
+If you want to utilize a singular detrending method for all of your series, or you used interactive detrending to determine the best fit for your data, you can use the ```detrend()``` function instead of ```i.detrend()```. In this function you will choose one of the following detrending options with *method = *: "Spline", "ModNegExp", "Mean", "Ar", "Friedman", or "ModHugershoff".
 
 ```{r Detrending, echo=TRUE, message=FALSE, warning=FALSE}
 grow.rwi <- detrend(rwl = grow.rwl, method = c("Spline"), nyrs = NULL, f = 0.5, pos.slope = FALSE)
 grow.rwi
 ```
 
-To examine the statistics for the entire chronology you can use ```rwi.stats()``` or ```rwi.stats.running()``` to use running statistics in order to adjust the time periods.
+To examine the statistics for the entire chronology you can use ```rwi.stats()``` or ```rwi.stats.running()``` to use running statistics in order to adjust the time periods. See ```?rwi.stats.running``` for help on this function.
 
 ```{r Stats, echo=TRUE, message=FALSE, warning=FALSE}
 rwi.stats(grow.rwi)
@@ -135,35 +144,45 @@ rwi.stats(grow.rwi)
 rwi.stats.running(grow.rwi)
 ```
 
+## Generating Chronologies
+
 The ARSTAN program generates a standardized chronology, an ARSTAN chronology, and a residual chronology. In *dplR* you can use the ```chron()``` function to build a mean value chronology from detrended ring widths produced from a ```detrend()``` function. 
 
 Standardized chronology:
 ```{r Standardized, echo=TRUE, message=FALSE, warning=FALSE}
-grow.crn <- chron(x = grow.rwi, prefix = "TAH", biweight = TRUE, prewhiten = FALSE)
+grow.crn <- chron(x = grow.rwi, prefix = "BTK", biweight = TRUE, prewhiten = FALSE)
 grow.crn
 ```
 
-Standardized and Residual chronologies:
+Standard and Residual chronologies:
 ```{r Residual, echo=TRUE, message=FALSE, warning=FALSE}
-grow.crn <- chron(x = grow.rwi, prefix = "TAH", biweight = TRUE, prewhiten = TRUE)
+grow.crn <- chron(x = grow.rwi, prefix = "BTK", biweight = TRUE, prewhiten = TRUE)
 grow.crn
 ```
 
 You can then plot the chronology using ```crn.plot()``` to view chronologies developed with ```chron()```.
 
 ```{r ChronPlot, echo=TRUE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
-crn.plot(crn = grow.crn, add.spline = TRUE, nyrs = NULL, f = 0.5, crn.line.col='grey50',
-         spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80',
-         crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1,
-         xlab="Time", ylab="RWI")
+crn.plot(crn = grow.crn, add.spline = TRUE, nyrs = NULL, f = 0.5, crn.line.col='grey50', spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80', crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1, xlab="Time", ylab="RWI")
 ```
 
-#wavelet transform
+For daily and monthly dendroclimatological analysis in the **dendroTools** library you can save the developed chronologies as *.csv* files using the ```write.csv(x)``` function:
+
+```{r Export CRN, echo=TRUE}
+btk_std <- grow.crn[1] #subset only year (already as.numeric) and index columns
+write.csv(btk_std, file = "BTK_std.csv")
+```
+
+## Wavelet Transform
+Wavelet Transform allows you to look at frequencies or temporal patterns in your *crn* for paleoclimatological analysis.
+
+```{r Wavelet, echo=TRUE}
 Years <- as.numeric(rownames(grow.crn))
-PANstd <- grow.crn[, 1]
-out.wave <- morlet(y1 = PANstd, x1 = Years, p2 = 9, dj = 0.1,
+rings <- grow.crn[, 1]
+tubular <- morlet(y1 = rings, x1 = Years, p2 = 9, dj = 0.1,
                    siglvl = 0.99)
-wavelet.plot(out.wave, useRaster = NA)
+wavelet.plot(tubular, useRaster = NA)
+```
 
 # Treeclim
 
@@ -176,7 +195,7 @@ summary(grow.crn)
 Next you will need to load climate data. There are a number of methods for adding climate data but this example has one as a csv file in the project.
 
 ```{r Climate Data, echo=TRUE, message=FALSE, warning=FALSE}
-climate <- read.csv("WA_div5_climate_cascades_west.csv", header = TRUE)
+climate <- read.csv("WY_yellowstone_climate.csv", header = TRUE)
 names(climate)
 summary(climate)
 ym <- climate[,1:2] #pull year and month columns
@@ -187,26 +206,27 @@ summary(clim)
 
 
 #Response function analysis in treeclim - modeled after Dendroclim2002. 
-#Now can take dynamic = "static", "moving", "evolving"
+#Can take dynamic = "static", "moving", "evolving"
 resp <- dcc(chrono = grow.crn, climate = clim, selection = -5:10, 
-            method = "response", dynamic = "evolving", win_size = 35, win_offset = 1, start_last = TRUE,
-            timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
-coef <- coef(resp)
-plot(resp)
-resp #show model results
-traceplot(resp, variables = NULL, facet = FALSE)
+                method = "correlation", dynamic = "moving", win_size = 35, win_offset = 1, start_last = TRUE,
+                timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE) #this is the main function in treeclim
+coef <- coef(resp) #model coefficients 
+plot(resp) #plot the model coefficients
+resp #show model results if you'd like
+traceplot(resp, variables = c("PCP.prev.aug", "PCP.curr.jun", "PCP.curr.jul"), facet = FALSE) #shows correlations over time if moving or evolutionary selected
 #save the output
 write.csv(coef, file = ("pcp_coef.csv")) #output coeff
-tiff("resp_coef.tiff", width = 8, height = 4, units = 'in', res = 300) #write plot to file
+#write plot to file
+tiff("resp_coef.tiff", width = 8, height = 4, units = 'in', res = 300) 
 plot.new()
 plot(resp)
 title(main = "Climate", xlab = "Month")
 dev.off()
 
-#evaluate recon skill with split calibration, requires 2 climate variables
-recon <- dcc(chrono = grow.crn, climate = clim, selection = 1:2, #use a selection with recon variable of interest
-             method = "response", dynamic = "static", win_size = 35, win_offset = 1, start_last = TRUE,
-             timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
+#evaluate recon skill with split calibration, requires 2 climate variables/months
+recon <- dcc(chrono = grow.crn, climate = clim, selection = 6:7, #use a selection with recon variable of interest - modifiers like .mean or .sum can be used to average across months
+                method = "response", dynamic = "static", win_size = 35, win_offset = 1, start_last = TRUE,
+                timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
 recon_coef <- coef(recon)
 plot(recon)
 recon #show model results
@@ -215,20 +235,19 @@ skillz <- skills(object = recon, target = .mean(1:2), model = "ols", calibration
 plot(skillz)
 skillz #show model results
 
-#evaluate recon skill with split calibration with single variable
-recon_dlm <- dlm(chrono = grow.crn, climate = clim, selection = 2, timespan = NULL, var_names = NULL,
-                 param_names = NULL, intercept = TRUE, scale = FALSE)
+#evaluate recon skill with split calibration with single variable - is your model time stable and does it verify?
+recon_dlm <- dlm(chrono = grow.crn, climate = clim, selection = 6, timespan = NULL, var_names = NULL,
+    param_names = NULL, intercept = TRUE, scale = FALSE)
 recon_coef <- coef(recon_dlm)
 plot(recon_dlm)
-
 recon_dlm #show model results
 #this does the evaluation
-skillz <- skills(object = recon_dlm, target = 2, model = "ols", calibration = "50%", timespan = NULL)
+skillz <- skills(object = recon_dlm, target = 6, model = "ols", calibration = "50%", timespan = NULL)
 plot(skillz)
 skillz #show model results
 
-#seasonal correlation - try it
-climate <- read.csv("WA_div5_climate_cascades_west.csv", header = TRUE)
+#seasonal correlation - developed from Dave Meko orginally in Matlab
+climate <- read.csv("WY_yellowstone_climate.csv", header = TRUE)
 names(climate)
 summary(climate)
 ym <- climate[,1:2] #pull year and month columns
@@ -236,7 +255,7 @@ var1 <- climate[3:4] #pull climate variables, 1 or 2 at a time to avoid N proble
 clim <- data.frame(c(ym, var1)) #build climate data frame 
 summary(clim)
 seas <- seascorr(grow.crn, climate, var_names = NULL, timespan = NULL, complete = 9,
-                 season_lengths = c(1, 3, 6), primary = 1, secondary = 2, ci = 0.05)
+         season_lengths = c(1, 3, 6), primary = 1, secondary = 2, ci = 0.05)#this is the main function
 plot(seas)
 seas
 
@@ -247,22 +266,22 @@ seas
 To start you need to read in a rwl file to begin the analysis.
 
 ```{r Trader Data, echo=TRUE, message=FALSE, warning=FALSE}
-thedata <- read.rwl('wa091.rwl')
+thedata <- read.tucson('Yellowstone_PSME_format.txt')
 ```
 
 For this example the *Growth Averaging*, ```growthAveragingALL()```, technique will be used with a the following paramenters: years averaged prior to release = 10 (*m1*), years averaged after release = 10, number of years between release events = 10, moderate relase = 0.25, major release = 0.50, with 5yrs of exceeding growth to be considered a release. Note, some of the analyses will create a large number of files to be created in your working directory/
 
 ```{r NowackiAbrams, echo=TRUE, message=FALSE, warning=FALSE}
-growthAveragingALL(thedata, releases = NULL, m1 = 10, m2 = 10,buffer = 10, drawing = TRUE, criteria = 0.25, criteria2 = 0.50,prefix = "ga", gfun = mean, length = 5, storedev = jpeg)
+growthAveragingALL(thedata, releases = NULL, m1 = 15, m2 = 15,buffer = 10, drawing = TRUE, criteria = 0.25, criteria2 = 0.50,prefix = "ga", gfun = mean, length = 5, storedev = jpeg)
 ```
 
 Similar to previous script above
 #plot raw data
 spag.plot(thedata, zfac = 1, useRaster = FALSE, res = 300)
-thedata.raw.crn <- chron(thedata, prefix = "CAM", prewhiten=FALSE)
+thedata.raw.crn <- chron(thedata, prefix = "BTK", prewhiten=FALSE)
 plot(thedata.raw.crn,abline.pos=NULL,ylab='mm',xlab='Year')
 
-#Basal Area Increment calculation in dplR
+# Basal Area Increment calculation in *dplR*
 
 grow.rwl <- read.rwl(fname = "wa091.rwl", format = "auto") #just change fname to run stuff below
 basal <- bai.out(grow.rwl, diam = NULL)
@@ -278,12 +297,14 @@ After loading the ```burnr``` library, you can use ```read_fhx()``` to load data
 
 ```{r Load FHX, echo=TRUE, message=FALSE, warning=FALSE}
 Zion <- read_fhx('Zion.fhx')
+Zion
 ```
 
 Although each of the samples have an ID, we can add so site information in order to facet our plots. This will sort each of the samples into the appropriate category when facted with the ```plot_demograph``` function.
 
 ```{r Plot Facet FHX, echo=TRUE, message=FALSE, warning=FALSE}
 Sites <- read.csv('ZionSiteIDs.csv')
+Sites
 facetplot <- plot_demograph(Zion, facet_group = Sites$SiteID, facet_id = Sites$series, plot_legend = TRUE)
 print(facetplot)
 ```
@@ -305,4 +326,4 @@ print(compositerug)
 ```
 
 -----------------------------------------------------
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+This workbook was created as an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. The resulting *html* is used to display the static contents via GitHub.
