@@ -220,17 +220,19 @@ traceplot(resp, variables = c("PCP.prev.aug", "PCP.curr.jun", "PCP.curr.jul"), f
 You can save the output using the following script: ```write.csv(coef, file = ("pcp_coef.csv"))```
 
 Additionally you can write the plot to a file:
-<br>```tiff("resp_coef.tiff", width = 8, height = 4, units = 'in', res = 300)```</br>
-<br>```plot.new()```</br>
-<br>```plot(resp)```</br>
-<br>```title(main = "Climate", xlab = "Month")```</br>
-<br>```dev.off()```</br>
-
+```
+tiff("resp_coef.tiff", width = 8, height = 4, units = 'in', res = 300)
+plot.new()
+plot(resp)
+title(main = "Climate", xlab = "Month")
+dev.off()
+```
 ## Split Calibration with 2 Climate Variables/Months
 ```{r 2 Variable Evaluation, echo=TRUE, fig.keep='all', fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
 recon <- dcc(chrono = grow.crn, climate = clim, selection = 6:7, #use a selection with recon variable of interest - modifiers like .mean or .sum can be used to average across months
-                method = "response", dynamic = "static", win_size = 35, win_offset = 1, start_last = TRUE,
-                timespan = NULL, var_names = NULL, ci = 0.05, boot = "std", sb = FALSE)
+             method = "response", dynamic = "static", win_size = 35,
+             win_offset = 1, start_last = TRUE, timespan = NULL, var_names =
+             NULL, ci = 0.05, boot = "std", sb = FALSE)
 recon_coef <- coef(recon)
 plot(recon)
 recon #show model results
@@ -306,11 +308,12 @@ basal_p <- print(basal)
 spag.plot(basal[1], zfac = 1, useRaster = FALSE, res = 300)
 ```
 
-Similar to before, you can export the data using ```write.csv(basal_p, "basal_bai.csv")```
+Similar to before, you can export the data using 
+```write.csv(basal_p, "basal_bai.csv")```
 
 # burnR
 
-The **burnR** package creates composite fire history plots similar to the **FHX2** and **FHAES** programs. It uses *FHX* formatted files. An example of a FHX file is included on this project.
+The **burnR** package creates composite fire history plots similar to the **FHX2** and **FHAES** programs. It uses *FHX* formatted files. An example of a FHX file is included in the repository.
 
 After loading the ```burnr``` library, you can use ```read_fhx()``` to load data already formatted into the FHX format.
 
@@ -333,95 +336,113 @@ Another option available in ```plot_demograph``` is a to create a plot of all sa
 ```{r Plot Comp FHX, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 rugplot <- plot_demograph(Zion, composite_rug = TRUE, plot_legend = TRUE)
 compositerug <- rugplot + 
-  annotate('rect', xmin = 1721, xmax = 1723, ymin = 0, ymax = 21, alpha = 0.4) + 
-  annotate('rect', xmin = 1734, xmax = 1736, ymin = 0, ymax = 21, alpha = 0.4) + 
-  annotate('rect', xmin = 1748, xmax = 1750, ymin = 0, ymax = 21, alpha = 0.4) + 
-  annotate('rect', xmin = 1777, xmax = 1779, ymin = 0, ymax = 21, alpha = 0.4) + 
-  annotate('rect', xmin = 1793, xmax = 1795, ymin = 0, ymax = 21, alpha = 0.4) + 
-  scale_x_continuous(limits=c(1450, 2005), breaks = seq(1450,2005,25)) + 
+  annotate('rect', xmin = 1721, xmax = 1723, ymin = 0, ymax = 21, alpha = 0.4) +   annotate('rect', xmin = 1734, xmax = 1736, ymin = 0, ymax = 21, alpha = 0.4) +   annotate('rect', xmin = 1748, xmax = 1750, ymin = 0, ymax = 21, alpha = 0.4) +   annotate('rect', xmin = 1777, xmax = 1779, ymin = 0, ymax = 21, alpha = 0.4) +   annotate('rect', xmin = 1793, xmax = 1795, ymin = 0, ymax = 21, alpha = 0.4) +   scale_x_continuous(limits=c(1450, 2005), breaks = seq(1450,2005,25)) + 
   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.2), 
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 print(compositerug)
 ```
 
 # dendroTools
-Alright ya'll, let's step up the game
-Let's try some climate response with daily climate data 'cause trees don't know what a month is
-You can get daily climate data for the US from the PRISM Climate Group
+Alright, let's step up the game! Let's try some climate response with daily climate data because trees don't know what a month is.  You can get daily climate data for the US from the [PRISM Climate Group](http://www.prism.oregonstate.edu/).
 
-setwd("C:/Users/rmaxwell2/Desktop/Arrr_Demo_NADEF_2019")
-library(dendroTools)
-
-#Load and format data - such a pain in the a**
+Load and format the data prior to analysis.
+```{r Formatting PCP Data, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 pcp_d <- read.csv("BTK_daily_pcp.csv", header = TRUE)
 row.names(pcp_d) <- as.numeric(pcp_d$Year)
-pcp_d <- pcp_d[,2:367]#subset only 1 to 366 days, not year column
+pcp_d <- pcp_d[,2:367] #subset only 1 to 366 days, not year column
 crn_d <- read.csv("Btk_std.csv")
 row.names(crn_d) <- as.numeric(crn_d$X) #set the years as row names
 crn_d <- crn_d[2] #subset only growth index
 head(crn_d) 
-#yep, that looks correct now
-
-#have a look at the daily climate data
+```
+Take a look at the daily climate data
+```{r Glimpse, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 glimpse_daily_data(env_data = pcp_d, tidy_env_data = FALSE, na.color = "white")
+```
 
-#analyze growth vs climate with fixed window width
+Analyze growth vs climate with fixed window width. This is set in the script using the ```fixed_width = ``` function.
+```
 fixed_width <- daily_response(response = crn_d, env_data = pcp_d,
                method = "cor", fixed_width = 60, row_names_subset = TRUE,
                remove_insignificant = TRUE, alpha = 0.05)
-               
+```               
+```{r Fixed Width, echo=TRUE, fig.height=6, fig.keep='all', fig.width=10, message=FALSE, warning=FALSE}               
 fixed_width$plot_extreme #creates a plot showing best correlated period
+```
 
-#Compare the response across two periods of analysis to assess time stability, or you can leave the subset to all the years
+You can compare the response across two periods of analysis to assess time stability, or you can leave the subset to all the years.
+
+```
 btk_past <- daily_response(response = crn_d, env_data = pcp_d,
             method = "cor", lower_limit = 50, upper_limit = 70,
             row_names_subset = TRUE, previous_year = TRUE,
             remove_insignificant = TRUE, alpha = 0.05,
             plot_specific_window = 60, subset_years = c(1981, 1998))
-
+```
+```
 btk_present <- daily_response(response = crn_d, env_data = pcp_d,
                method = "cor", lower_limit = 50, upper_limit = 70,
                row_names_subset = TRUE, previous_year = TRUE,
                remove_insignificant = TRUE, alpha = 0.05,
                plot_specific_window = 60, subset_years = c(1999, 2016))
+```
 
-#plot the results
+Now you can plot the results.
+```{r BTK Past Present Plots, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 btk_past$plot_heatmap
 btk_present$plot_heatmap
 btk_past$plot_specific #choose a specific window length to plot if you set this above
 btk_present$plot_specific
+```
+## Climate Response on the Principle Components
 
-# Principal Components Analysis then climate response on the PCs
-#Load data
+Load data
+```{r PCA DAta, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 data(example_proxies_individual)
 data(LJ_daily_temperatures)
-#Example PCA - just create a data frame with multiple crns
+```
+
+Example PCA - just create a data frame with multiple crns
+```
 example_PCA <- daily_response(response = example_proxies_individual, 
                               env_data = LJ_daily_temperatures, method = "lm", 
                               lower_limit = 60, upper_limit = 70,
                               row_names_subset = TRUE, remove_insignificant =
                               TRUE, alpha = 0.01, PCA_transformation = TRUE,
                               components_selection = "manual", N_components = 2)
-
+```
+Summary output and plot for the PCA analysis.
+```{r PCA, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 summary(example_PCA$PCA_output)
-
+```
+```{r PCA Heat Map, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 example_PCA$plot_heatmap
+```
 
-#oh, you want a quick common period reconstruction?
+## Quick common period reconstruction
+
+Load the sample data.
+```{r CP Recon Data, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 data(data_TRW)
 data(KRE_daily_temperatures)
+```
+Reconstruction
+```
 example_reconstruction_lin <- daily_response(response = data_TRW, 
                               env_data = KRE_daily_temperatures, method = "lm",
                               metric = "r.squared", lower_limit = 30,
                               upper_limit = 40, row_names_subset = TRUE,
                               temporal_stability_check = "progressive",
                               cross_validation_type = "randomized", k = 3)
-
+```
+Reconstruction Plots
+```{r Recon Plots, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 example_reconstruction_lin$plot_extreme
 example_reconstruction_lin$temporal_stability
 example_reconstruction_lin$cross_validation
 example_reconstruction_lin$transfer_function
-
+```
+```{r Recon Models, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$optimized_return)
 
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
@@ -431,74 +452,90 @@ linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$opt
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
 
 plot(row.names(data_TRW), reconstruction$predictions, type = "l", xlab = "Year", ylab = "Mean temperature May 15 - Jun 27 [?C]")
-
-# Monthly Analysis
-#load data
+```
+## Monthly Analysis
+load data
+```{r Monthly Analysis Data, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 flow_d <- read.csv("BighornXavier_r.csv", header = TRUE)
 row.names(flow_d) <- as.numeric(flow_d$year)
 flow_d <- flow_d[,2:13]#subset only 1 to 366 days, not year column
-#run analysis with split period
+```
+
+Run analysis with split period
+```
 flow_past <- monthly_response(response = crn_d, env_data = flow_d,
              method = "cor", row_names_subset = TRUE, previous_year = TRUE,
              remove_insignificant = TRUE, alpha = 0.05, subset_years = c(1935,
              1976), aggregate_function = 'mean')
-
+```
+```
 flow_present <- monthly_response(response = data_MVA, env_data =
                 LJ_monthly_temperatures, method = "cor", row_names_subset =
                 TRUE, alpha = 0.05, previous_year = TRUE, remove_insignificant =
                 TRUE, subset_years = c(1977, 2016), aggregate_function = 'mean')
-
+```
+```{r Flow Plots, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 flow_past$plot_heatmap
 flow_present$plot_heatmap
 flow_past$plot_extreme
 flow_present$plot_extreme
+```
+## Monthly analysis using a PCA of chronologies with crns
 
-#Monthly analysis using a PCA of chronologies
-#bring in crns
-###############Still need to get crns in column format
+You still need to get crns in column format
+```
 flow_PCA <- monthly_response(response = example_proxies_individual,
             env_data = flow_d, method = "lm", row_names_subset = TRUE,
             remove_insignificant = TRUE, alpha = 0.01, PCA_transformation =
             TRUE, previous_year = TRUE, components_selection = "manual",
             N_components = 2)
-
+```
+```{r Monthly CRN Plots, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 summary(flow_PCA$PCA_output)
 flow_PCA$plot_heatmap
 flow_PCA$plot_extreme
-
+```
 # DendroSync
 
-Provides functions for the calculation and plotting of synchrony in tree growth from tree-ring width chronologies (TRW index).
+This package provides functions for the calculation and plotting of synchrony in tree growth from tree-ring width chronologies (TRW index).
 
-library(DendroSync)
+Load Data
+```{r DendroSync Data, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 data(conifersIP) #note the format of the data if you choose to use this analysis
 head(conifersIP)
+```
 
-##Calculate synchrony for null.model (broad evaluation, mBE) and homoscedastic variant
-# of unstructured model (or full, mUN) for conifersIP data, 
-# and heteroscedastic variant for 1970-1999 period.
+Calculate synchrony for null.model (broad evaluation, mBE) and homoscedastic variant of unstructured model (or full, mUN) for conifersIP data, and heteroscedastic variant for 1970-1999 period.
 
-##Fit the homoscedastic set of varcov models (mBE, mNE, mCS, mUN) 
-#using taxonomic grouping criteria (i.e. Species)
+Fit the homoscedastic set of varcov models (mBE, mNE, mCS, mUN) using taxonomic grouping criteria (i.e. Species)
+```{r ModHM, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 ModHm <- dendro.varcov(TRW ~ Code, varTime = "Year", varGroup = "Species", 
                        data = conifersIP, homoscedastic = TRUE)
 
 summary(ModHm)# Class and length of list elements
+```
 
-#Synchrony for mBE and mUN models
+Examine synchrony for mBE and mUN models
+```{r Model Synchrony, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 sync(ModHm, modname = "mBE")
 sync(ModHm, modname = "mUN")
+```
 
-##Chop the data from 1970 to 1999.
+Subset the data from 1970 to 1999.
+```{r Model Subset, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 conif.30 <- conifersIP[conifersIP$Year>1969 & conifersIP$Year<2000,]
 summary(conif.30$Year)
+```
 
-#Fit the heteroscedastic set of variance covariance mixed models (mBE, mHeNE, mHeCS, mHeUN)
-# using taxonomic grouping criteria (ie. Species)
+Fit the heteroscedastic set of variance covariance mixed models (mBE, mHeNE, mHeCS, mHeUN) using taxonomic grouping criteria (ie. Species)
+```{r Mixed Models, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 ModHt30 <- dendro.varcov(TRW ~ Code, varTime = "Year", varGroup = "Species", 
                          data = conif.30, homoscedastic = FALSE)
+```
+```{r Mixed Model Synchrony, echo=TRUE, message=FALSE, warning=FALSE}
 sync(ModHt30, modname = "mBE")
 sync(ModHt30, modname = "mHeUN")
+```
 
 -----------------------------------------------------
 This workbook was created as an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. The resulting *html* is used to display the static contents via GitHub.
