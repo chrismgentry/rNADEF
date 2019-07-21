@@ -1,6 +1,8 @@
 # rNADEF
 Example scripts for dendro analysis presented at the North American Dendroecological Fieldweek
 
+Website for this project can be found at: *https://chrismgentry.github.io/rNADEF/*
+
 Scripts created for the [2019 NADEF](https://sites.google.com/view/nadef/past-fieldweeks/2019) at A.L. Mickelson Field Station near Cody, WY
 
 Sample data made available from previous fieldweeks or provided by instructors. Please contact Dr. Stockton Maxwell (rmaxwell2@radford.edu) or Dr. Christopher Gentry (gentryc@apsu.edu) before using the data for examples/projects outside of the NADEF Organization. 
