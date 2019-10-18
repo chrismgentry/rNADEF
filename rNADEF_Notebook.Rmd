@@ -2,17 +2,36 @@
 title: "rNADEF Workbook"
 author: North American Dendroecological Fieldweek <br> <i><small>Script by Stockton Maxwell, NADEF Co-Organizer; Github and Website by Chris Gentry; and data from Grant Harley, NADEF Co-Organizer,  Stockton Maxwell, Chris Gentry, and many others</small></i> <br>
 output:
-  html_notebook: 
-    number_sections: yes
-    theme: readable
-    toc: yes
-  html_document:
+  html_notebook:
     df_print: paged
     rows.print: 10
+    theme: cosmo
+    highlight: breezedark
+    number_sections: yes
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
   pdf_document: default
 editor_options: 
   chunk_output_type: inline
 ---
+<style type="text/css">
+
+h1.title {
+  font-size: 40px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkGreen;
+  text-align: Left;
+}
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 20px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkGreen;
+  text-align: Left;
+}
+</style>
+
 <style>
   .col2 {
     columns: 2 200px;         /* number of columns and width in pixels*/
@@ -444,13 +463,9 @@ example_reconstruction_lin$transfer_function
 ```
 ```{r Recon Models, echo=TRUE, fig.keep='all', fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$optimized_return)
-
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
-
 linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$optimized_return)
-
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
-
 plot(row.names(data_TRW), reconstruction$predictions, type = "l", xlab = "Year", ylab = "Mean temperature May 15 - Jun 27 [?C]")
 ```
 ## Monthly Analysis
