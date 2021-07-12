@@ -7,7 +7,7 @@
 #GETTING STARTED
 
 #Set working directory or use Session menu
-setwd("C:/Users/rmaxwell2/Desktop/Arrr_Demo_NADEF_2019")#make sure those slashes face the correct way
+setwd("C:/Users/rmaxwell2/Google Drive/Research Projects/NADEF_SM/NADEF 2021 Dendroclimatology/Arrr_Demo_NADEF_2021")#make sure those slashes face the correct way
 
 #install libraries
 install.packages("dplR")
@@ -29,6 +29,7 @@ library(burnr)
 library(graphics)
 library(utils)
 
+
 ########################################################################################
 #Dendrochronology Program Library in R 
 #Cofecha type stuff in dplR - this section of the package helps the user crossdate tree ring series
@@ -41,9 +42,9 @@ skel.plot(grow.rwl[1]) #skeleton plot of an individual series
 colSums(grow.rwl, na.rm = TRUE, dims = 1) # get radii length in mm
 crn.common <- common.interval(grow.rwl, type=c("years"), make.plot=TRUE) #find common time interval
 sens1(grow.rwl) #Calculate mean sensitivity
+rwl.report(grow.rwl)
 
-
-#crossdating
+#crossdating- you can use this but I highly recommend Andy Bunn's xdater app
 corr.rwl.seg(rwl = grow.rwl, seg.length = 50, bin.floor = 100, n = NULL, prewhiten = TRUE, pcrit = 0.05, 
              biweight = TRUE, method = c("spearman"), make.plot = TRUE, label.cex = 1, floor.plus1 = FALSE,
              master = NULL) #cofecha essentially
@@ -74,19 +75,19 @@ rwi.stats.running(grow.rwi) #running stats - time periods can be adjusted, see h
 
 #building crn with AR model, this produces a residual crn
 grow.crn <- chron(x = grow.rwi, prefix = "BTK", biweight = TRUE, prewhiten = TRUE)
+#plot crn
+crn.plot(crn = grow.crn, add.spline = TRUE, nyrs = NULL, f = 0.5, crn.line.col='grey50',
+         spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80',
+         crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1,
+         xlab="Time", ylab="RWI")
 
 #building crn without AR model, this produces a standardized crn
 grow.crn <- chron(x = grow.rwi, prefix = "BTK", biweight = TRUE, prewhiten = FALSE)
-
-#subset and save crn as .csv for later analysis in DendroTools package
-btk_std <- grow.crn[1] #subset only year (already as.numeric) and index columns
-write.csv(btk_std, file = "BTK_std.csv")
-
 #plot crn
 crn.plot(crn = grow.crn, add.spline = TRUE, nyrs = NULL, f = 0.5, crn.line.col='grey50',
-       spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80',
-       crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1,
-       xlab="Time", ylab="RWI")
+         spline.line.col='red', samp.depth.col='grey90', samp.depth.border.col='grey80',
+         crn.lwd=1, spline.lwd=2.0, abline.pos=1, abline.col='black', abline.lty=1,abline.lwd=1,
+         xlab="Time", ylab="RWI")
 
 #wavelet transform - this allows you to look at frequencies or temporal patterns in your crn. It's good for paleoclimatology.
 Years <- as.numeric(rownames(grow.crn))
@@ -94,6 +95,10 @@ rings <- grow.crn[, 1]
 tubular <- morlet(y1 = rings, x1 = Years, p2 = 9, dj = 0.1,
                    siglvl = 0.99)
 wavelet.plot(tubular, useRaster = NA)
+
+#subset and save crn as .csv for later analysis in DendroTools package
+btk_std <- grow.crn[1] #subset only year (already as.numeric) and index columns
+write.csv(btk_std, file = "BTK_std.csv")
 
 
 #####################################################################################
@@ -165,6 +170,7 @@ seas <- seascorr(grow.crn, climate, var_names = NULL, timespan = NULL, complete 
 plot(seas)
 seas
 
+
 ############################################################################################
 #TRADER Code for Growth Release Detection
 
@@ -173,7 +179,7 @@ library(dplR)
 library(TRADER)
 
 #set working directory
-setwd("C:/Users/rmaxwell2/Desktop/Arrr_Demo_NADEF_2019")
+setwd("C:/Users/rmaxwell2/Google Drive/Research Projects/NADEF_SM/NADEF 2021 Dendroclimatology/Arrr_Demo_NADEF_2021")
 
 #read in crns, change file name to run your own data
 thedata <- read.tucson('Yellowstone_PSME_format.txt') #Use your file in your WD
@@ -186,6 +192,12 @@ spag.plot(thedata, zfac = 1, useRaster = FALSE, res = 300)
 thedata.raw.crn <- chron(thedata, prefix = "BTK", prewhiten=FALSE)
 plot(thedata.raw.crn,abline.pos=NULL,ylab='mm',xlab='Year')
 
+#This function calculates the synchronous growth changes (sgc), semi synchronous growth changes (ssgc) and the length of the compared overlap for a given set of tree-ring records.
+changes <- sgc(thedata,overlap = 50, prob = TRUE)
+mean(changes$sgc_mat, na.rm = TRUE)
+mean(changes$ssgc_mat, na.rm = TRUE)
+
+
 ##############################################################################
 #Basal Area Increment calculation in dplR
 
@@ -195,12 +207,13 @@ basal_p <- print(basal)
 spag.plot(basal[5], zfac = 1, useRaster = FALSE, res = 300)
 write.csv(basal_p, "basal_bai.csv")
 
+
 ###############################################################################
 #BURNR
 #How about a little fire history graphing - there's some superposed epoch analysis in there too if you fancy
 #From Chris Gentry, NADEF Co-organizer
 
-setwd("C:/Users/rmaxwell2/Desktop/Arrr_Demo_NADEF_2019")
+setwd("C:/Users/rmaxwell2/Google Drive/Research Projects/NADEF_SM/NADEF 2021 Dendroclimatology/Arrr_Demo_NADEF_2021")
 library(burnr)
 library(dplR)
 library(ggplot2)
@@ -212,42 +225,38 @@ rugplot <- plot_demograph(Zion, composite_rug = TRUE, plot_legend = TRUE)
 compositerug <- rugplot + annotate('rect', xmin = 1721, xmax = 1723, ymin = 0, ymax = 21, alpha = 0.4) + annotate('rect', xmin = 1734, xmax = 1736, ymin = 0, ymax = 21, alpha = 0.4) + annotate('rect', xmin = 1748, xmax = 1750, ymin = 0, ymax = 21, alpha = 0.4) + annotate('rect', xmin = 1777, xmax = 1779, ymin = 0, ymax = 21, alpha = 0.4) + annotate('rect', xmin = 1793, xmax = 1795, ymin = 0, ymax = 21, alpha = 0.4) + scale_x_continuous(limits=c(1450, 2005), breaks = seq(1450,2005,25)) + theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.2), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 print(compositerug)
 
+
 #############################################################################
 #DENDROTOOLS
 #Alright ya'll, let's step up the game
 #Let's try some climate response with daily climate data 'cause trees don't know what a month is
 #You can get daily climate data for the US from the PRISM Climate Group
 
-setwd("C:/Users/rmaxwell2/Desktop/Arrr_Demo_NADEF_2019")
+setwd("C:/Users/rmaxwell2/Google Drive/Research Projects/NADEF_SM/NADEF 2021 Dendroclimatology/Arrr_Demo_NADEF_2021")
 library(dendroTools)
-
-# Load and format data - such a pain in the a**
-pcp_d <- read.csv("BTK_daily_pcp.csv", header = TRUE)
-row.names(pcp_d) <- as.numeric(pcp_d$Year)
-pcp_d <- pcp_d[,2:367]#subset only 1 to 366 days, not year column
-crn_d <- read.csv("Btk_std.csv")
-row.names(crn_d) <- as.numeric(crn_d$X) #set the years as row names
-crn_d <- crn_d[2] #subset only growth index
-head(crn_d) 
-#yep, that looks correct now
+#download daily data from a single point for a single variable on the PRISM website
+cdata <- read.table(file = "BTK_daily_pcp_original.csv", skip = 10, header = TRUE, sep = ",") #skips reading the header
+head(cdata)
+cdata <- data_transform(input = cdata, format = "daily",
+  monthly_aggregate_function = "auto", date_format = "ymd")#transform data
 
 #have a look at the daily climate data
-glimpse_daily_data(env_data = pcp_d, tidy_env_data = FALSE, na.color = "white")
+glimpse_daily_data(env_data = cdata, tidy_env_data = FALSE, na.color = "white")
 
 #analyze growth vs climate with fixed window width
-fixed_width <- daily_response(response = crn_d, env_data = pcp_d,
+fixed_width <- daily_response(response = crn_d, env_data = cdata,
                                       method = "cor", fixed_width = 60,
                                       row_names_subset = TRUE, remove_insignificant = TRUE,
                                       alpha = 0.05)
 fixed_width$plot_extreme #creates a plot showing best correlated period
 
 #Compare the response across two periods of analysis to assess time stability, or you can leave the subset to all the years
-btk_past <- daily_response(response = crn_d, env_data = pcp_d,
+btk_past <- daily_response(response = crn_d, env_data = cdata,
                                    method = "cor", lower_limit = 50, upper_limit = 70,
                                    row_names_subset = TRUE, previous_year = TRUE,
                                    remove_insignificant = TRUE, alpha = 0.05, 
-                                   plot_specific_window = 60, subset_years = c(1981, 1998))
-btk_present <- daily_response(response = crn_d, env_data = pcp_d,
+                                   plot_specific_window = 60, subset_years = c(1982, 1998))
+btk_present <- daily_response(response = crn_d, env_data = cdata,
                                       method = "cor", lower_limit = 50, upper_limit = 70,
                                       row_names_subset = TRUE, previous_year = TRUE,
                                       remove_insignificant = TRUE, alpha = 0.05, 
@@ -292,21 +301,22 @@ linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$opt
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
 linear_model <- lm(Optimized_return ~ TRW, data = example_reconstruction_lin$optimized_return)
 reconstruction <- data.frame(predictions = predict(linear_model, newdata = data_TRW))
-plot(row.names(data_TRW), reconstruction$predictions, type = "l", xlab = "Year", ylab = "Mean temperature May 15 - Jun 27 [ºC]")
+plot(row.names(data_TRW), reconstruction$predictions, type = "l", xlab = "Year", ylab = "Mean temperature May 15 - Jun 27 [ÂºC]")
+
 
 ############################################################################################
 #MONTHLY ANALYSIS
 #load data
 flow_d <- read.csv("BighornXavier_r.csv", header = TRUE)
 row.names(flow_d) <- as.numeric(flow_d$year)
-flow_d <- flow_d[,2:13]#subset only 1 to 366 days, not year column
+flow_d <- flow_d[,2:13]#subset months, not year column
 #run analysis with split period
 flow_past <- monthly_response(response = crn_d, env_data = flow_d,
                                      method = "cor", row_names_subset = TRUE, previous_year = TRUE,
                                      remove_insignificant = TRUE, alpha = 0.05,
-                                     subset_years = c(1935, 1976), aggregate_function = 'mean')
+                                     subset_years = c(1936, 1976), aggregate_function = 'mean')
 
-flow_present <- monthly_response(response = data_MVA, env_data = LJ_monthly_temperatures,
+flow_present <- monthly_response(response = crn_d, env_data = flow_d,
                                         method = "cor", row_names_subset = TRUE, alpha = 0.05,
                                         previous_year = TRUE, remove_insignificant = TRUE,
                                         subset_years = c(1977, 2016), aggregate_function = 'mean')
@@ -316,6 +326,8 @@ flow_present$plot_heatmap
 flow_past$plot_extreme
 flow_present$plot_extreme
 
+
+########### NOT READY YET #######################
 #Monthly analysis using a PCA of chronologies
 #bring in crns
 ###############Still need to get crns in column format
@@ -328,6 +340,7 @@ flow_PCA <- monthly_response(response = example_proxies_individual,
 summary(flow_PCA$PCA_output)
 flow_PCA$plot_heatmap
 flow_PCA$plot_extreme
+
 
 #################################################################################
 #DendroSync - Provides functions for the calculation and plotting of synchrony in 
