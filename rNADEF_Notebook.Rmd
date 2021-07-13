@@ -57,6 +57,7 @@ There are a number of useful libraries for manipulating and analyzing tree-ring 
 + ggplot2
 + TRADER
 + treeclim
++ graphics
 + utils
 </ul></div>
 
@@ -71,6 +72,7 @@ library(dplR)
 library(ggplot2)
 library(TRADER)
 library(treeclim)
+library(graphics)
 library(utils)
 ```
 
